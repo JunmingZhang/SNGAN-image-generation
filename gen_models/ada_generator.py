@@ -65,11 +65,18 @@ class AdaGenerator(chainer.Chain):
         x, z = self(perm, return_z=True)
         losses = []
 
-        loss = F.mean_absolute_error(x, target_)
-        if self.config.normalize_l1_loss:
-            losses.append(backward(loss / loss.array))
+        loss_1 = F.mean_absolute_error(x, target_)
+        loss_2 = F.mean_squared_error(x, target_)
+        if self.config.primary_loss == 'l2':
+          if self.config.normalize_loss:
+              losses.append(backward(loss_2 / loss.array))
+          else:
+              losses.append(backward(loss_2))
         else:
-            losses.append(backward(loss))
+          if self.config.normalize_loss:
+              losses.append(backward(loss_1 / loss.array))
+          else:
+              losses.append(backward(loss_1))
 
         if vgg is not None:
             with chainer.using_config('train', False), chainer.using_config('enable_backprop', False):
